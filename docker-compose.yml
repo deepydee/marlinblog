@@ -1,0 +1,38 @@
+version: '3'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile # docker build -t slim-php -f docker/php/Dockerfile .
+    depends_on:
+      - mariadb
+    restart: always
+    volumes:
+      - .:/srv
+
+  nginx:
+    build:
+      context: .
+      dockerfile: docker/nginx/Dockerfile # docker build -t slim-nginx -f docker/nginx/Dockerfile .
+    restart: always
+    ports:
+      - 80:80
+    volumes:
+      - .:/srv
+
+  mariadb:
+    image: mariadb:10.1.21
+    ports:
+      - '${DB_PORT:-3306}:3306'
+    volumes:
+      - mariadb:/var/lib/mysql
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE}
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_USER: ${DB_USERNAME}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+
+volumes:
+  mariadb:
+    driver: local
