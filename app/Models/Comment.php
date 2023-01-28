@@ -18,4 +18,26 @@ class Comment extends Model
     {
         return $this->hasOne(User::class);
     }
+
+    public function allow()
+    {
+        $this->is_published = true;
+        $this->save();
+    }
+
+    public function disallow()
+    {
+        $this->is_published = false;
+        $this->save();
+    }
+
+    public function togglePublish()
+    {
+        return $this->is_published ? $this->disallow() : $this->allow();
+    }
+
+    public function remove()
+    {
+        $this->delete();
+    }
 }

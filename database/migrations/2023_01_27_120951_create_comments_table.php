@@ -18,6 +18,7 @@ return new class extends Migration
             $table->text('text');
             $table->integer('user_id');
             $table->integer('post_id');
+            $table->boolean('is_published')->default(false);
             $table->timestamps();
         });
     }

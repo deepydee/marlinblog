@@ -6,6 +6,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Hash;
 use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
@@ -51,4 +52,79 @@ class User extends Authenticatable
     {
         return $this->hasMany(Comment::class);
     }
+
+    public static function add($fields)
+    {
+        $user = new static;
+        $user->fill($fields);
+        $user->password = Hash::make($fields['password']);
+        $user->save();
+
+        return $user;
+    }
+
+    public function edit($fields)
+    {
+        $this->fill($fields);
+        $this->password = Hash::make($fields['password']);
+        $this->save();
+    }
+
+    public function remove()
+    {
+        $this->delete();
+    }
+
+    public function uploadAvatar($image)
+    {
+        if ($image === null) return;
+
+        Storage::delete('uploads/' . $this->image);
+        $filename = Str::random(10) . '.' . $image->extension();
+        $image->saveAs('uploads', $filename);
+        $this->image = $filename;
+        $this->save();
+    }
+
+    public function getImage()
+    {
+        if($this->image === null) return '/img/no-avatar.png';
+
+        return 'uploads/' . $this->image;
+    }
+
+    public function makeAdmin()
+    {
+        $this->is_admin = true;
+        $this->save();
+    }
+
+    public function makeNormal()
+    {
+        $this->is_admin = false;
+        $this->save();
+    }
+
+    public function toggleAdmin($value)
+    {
+        return $value === null ? $this->makeNormal() : $this->makeAdmin();
+    }
+
+    public function ban()
+    {
+        $this->is_banned = true;
+        $this->save();
+    }
+
+    public function unban()
+    {
+        $this->is_banned = false;
+        $this->save();
+    }
+
+    public function toggleBan($value)
+    {
+        return $value === null ? $this->unban() : $this->ban();
+    }
+
 }

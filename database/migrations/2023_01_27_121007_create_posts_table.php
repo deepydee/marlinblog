@@ -20,7 +20,7 @@ return new class extends Migration
             $table->text('content');
             $table->integer('category_id')->nullable();
             $table->integer('user_id')->nullable();
-            $table->boolean('status')->default(false);
+            $table->boolean('is_published')->default(false);
             $table->integer('views')->default(0);
             $table->boolean('is_featured')->default(false);
             $table->timestamps();

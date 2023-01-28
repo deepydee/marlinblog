@@ -8,4 +8,19 @@ use Illuminate\Database\Eloquent\Model;
 class Subscription extends Model
 {
     use HasFactory;
+
+    public function add($email)
+    {
+        $sub = new static;
+        $sub->email = $email;
+        $sub->token = Str::random(100);
+        $sub->save();
+
+        return $sub;
+    }
+
+    public function remove()
+    {
+        $this->delete();
+    }
 }
