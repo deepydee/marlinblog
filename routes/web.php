@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\DashboardController;
 use Illuminate\Support\Facades\Route;
 
@@ -18,4 +19,12 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/admin', [DashboardController::class, 'index']);
+// Route::prefix('admin')->group(function() {
+//     Route::get('/', [DashboardController::class, 'index'])->name('ad');
+//     Route::resource('/categories', CategoryController::class);
+// });
+
+Route::group(['prefix' => 'admin', 'as' => 'admin.'], function() {
+    Route::get('/', [DashboardController::class, 'index'])->name('home');
+    Route::resource('/categories', CategoryController::class);
+});
