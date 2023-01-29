@@ -33,6 +33,13 @@ services:
       MYSQL_USER: ${DB_USERNAME}
       MYSQL_PASSWORD: ${DB_PASSWORD}
 
+  npm:
+    image: node:19-slim
+    working_dir: /srv
+    entrypoint: ["npm"]
+    volumes:
+        - .:/srv
+
 volumes:
   mariadb:
     driver: local
