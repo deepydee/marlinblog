@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
@@ -21,7 +23,6 @@ class User extends Authenticatable
     protected $fillable = [
         'name',
         'email',
-        'password',
     ];
 
     /**
@@ -57,7 +58,6 @@ class User extends Authenticatable
     {
         $user = new static;
         $user->fill($fields);
-        $user->password = Hash::make($fields['password']);
         $user->save();
 
         return $user;
@@ -66,31 +66,48 @@ class User extends Authenticatable
     public function edit($fields)
     {
         $this->fill($fields);
-        $this->password = Hash::make($fields['password']);
+
         $this->save();
     }
 
     public function remove()
     {
+        $this->removeAvatar();
         $this->delete();
     }
 
-    public function uploadAvatar($image)
+    public function generatePassword($password)
     {
-        if ($image === null) return;
+        if ($password === null) return;
 
-        Storage::delete('uploads/' . $this->image);
-        $filename = Str::random(10) . '.' . $image->extension();
-        $image->saveAs('uploads', $filename);
-        $this->image = $filename;
+        $this->password = Hash::make($password);
+        $this->save();
+    }
+
+    public function uploadAvatar($avatar)
+    {
+        if ($avatar === null) return;
+
+        $this->removeAvatar();
+
+        $filename = $avatar->store('/', 'avatars');
+        $this->avatar = $filename;
+
         $this->save();
     }
 
     public function getImage()
     {
-        if($this->image === null) return '/img/no-avatar.png';
+        return $this->avatar
+        ? Storage::disk('avatars')->url($this->avatar)
+        : 'https://www.gravatar.com/avatar/'.md5(strtolower(trim($this->email)));
+    }
 
-        return 'uploads/' . $this->image;
+    public function removeAvatar()
+    {
+        if ($this->avatar !== null) {
+            Storage::disk('avatars')->delete($this->avatar);
+        }
     }
 
     public function makeAdmin()
