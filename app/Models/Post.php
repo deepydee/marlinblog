@@ -2,9 +2,11 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Cviebrock\EloquentSluggable\Sluggable;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Support\Facades\Storage;
 
 class Post extends Model
@@ -12,23 +14,23 @@ class Post extends Model
     use HasFactory;
     use Sluggable;
 
-    protected $fillable = ['title', 'content'];
+    protected $fillable = ['title', 'content', 'date'];
 
     public function category()
     {
-        return $this->hasOne(Category::class);
+        return $this->belongsTo(Category::class);
     }
 
     public function author()
     {
-        return $this->hasOne(User::class);
+        return $this->belongsTo(User::class, 'user_id');
     }
 
     public function tags()
     {
         return $this->belongsToMany(
             Tag::class,
-            'post_tags',
+            'posts_tags',
             'post_id',
             'tag_id'
         );
@@ -66,7 +68,7 @@ class Post extends Model
 
     public function remove()
     {
-        Storage::delete('uploads/' . $this->image);
+        $this->removeImage();
         $this->delete();
     }
 
@@ -74,21 +76,29 @@ class Post extends Model
     {
         if ($image === null) return;
 
-        Storage::delete('uploads/' . $this->image);
-        $filename = Str::random(10) . '.' . $image->extension();
-        $image->saveAs('uploads', $filename);
+        $this->removeImage();
+
+        $filename = $image->store('/', 'images');
         $this->image = $filename;
+
         $this->save();
+    }
+
+    public function removeImage()
+    {
+        if ($this->image !== null) {
+            Storage::disk('images')->delete($this->image);
+        }
     }
 
     public function getImage()
     {
-        if($this->image === null) return '/img/no-image.png';
-
-        return 'uploads/' . $this->image;
+        return $this->image
+        ? Storage::disk('images')->url($this->image)
+        : 'https://www.gravatar.com/avatar/'.md5(strtolower(trim($this->email)));
     }
 
-    public function setCategoty($id)
+    public function setCategory($id)
     {
        if ($id === null) return;
 
@@ -115,7 +125,7 @@ class Post extends Model
         $this->save();
     }
 
-    public function toggleStatus($value)
+    public function togglePublished($value)
     {
         return $value === null ? $this->setDraft() : $this->setPublic();
     }
@@ -135,5 +145,31 @@ class Post extends Model
     public function toggleFeatured($value)
     {
         return $value === null ? $this->setStandart() : $this->setFeatured();
+    }
+
+    public function getCategoryTitle()
+    {
+        return $this->category->title ?? 'Без категории';
+    }
+
+    public function getTags()
+    {
+        return $this->tags->isEmpty()
+        ? 'Нет тегов'
+        :  implode(', ', $this->tags->pluck('title')->all());
+    }
+
+
+    /**
+     * Interact with the post's date.
+     *
+     * @return \Illuminate\Database\Eloquent\Casts\Attribute
+     */
+    protected function date(): Attribute
+    {
+        return Attribute::make(
+            get: fn ($value) => Carbon::createFromFormat('Y-m-d', $value)->format('d/m/Y'),
+            set: fn ($value) => Carbon::createFromFormat('d/m/Y', $value)->format('Y-m-d'),
+        );
     }
 }

@@ -15,7 +15,7 @@ mix.styles([
     'resources/admin/bootstrap/css/bootstrap.min.css',
     'resources/admin/font-awesome/4.5.0/css/font-awesome.min.css',
     'resources/admin/ionicons/2.0.1/css/ionicons.min.css',
-    'resources/admin/plugins/iCheck/all.css',
+    'resources/admin/plugins/iCheck/minimal/_all.css',
     'resources/admin/plugins/datepicker/datepicker3.css',
     'resources/admin/plugins/select2/select2.min.css',
     'resources/admin/dist/css/AdminLTE.min.css',
@@ -40,3 +40,4 @@ mix.scripts([
 mix.copy('resources/admin/bootstrap/fonts', 'public/fonts');
 mix.copy('resources/admin/dist/fonts', 'public/fonts');
 mix.copy('resources/admin/dist/img', 'public/img');
+mix.copy('resources/admin/plugins/iCheck/minimal/blue.png', 'public/css');
